@@ -246,6 +246,7 @@ function renderUsers() {
       <option value="">Semua Divisi</option>
       ${[...new Set(AppData.users.map(u=>u.divisi))].map(d=>`<option value="${d}">${d}</option>`).join('')}
     </select>
+    <button class="btn-add-user" onclick="openAddUser()">＋ Tambah User</button>
   </div>
   <div id="usersTable">
     ${renderUsersTable(AppData.users)}
@@ -266,7 +267,7 @@ function renderUsersTable(users) {
             <th>UPS</th><th>Status</th>
             <th>Spek Terkini</th>
             <th>Upgrade</th><th>Servis</th>
-            <th>Kondisi</th>
+            <th>Kondisi</th><th>Aksi</th>
           </tr>
         </thead>
         <tbody>
@@ -309,12 +310,128 @@ function renderUsersTable(users) {
                 ${prosesCount>0?`<span class="badge badge-proses" style="margin-left:4px">${prosesCount} proses</span>`:''}
               </td>
               <td>${kondisi}</td>
+              <td style="white-space:nowrap">
+                <button class="btn-row-edit" onclick="openEditUser('${u.id}')" title="Edit User">✎</button>
+                <button class="btn-row-del" onclick="confirmDeleteUser('${u.id}')" title="Hapus User">✕</button>
+              </td>
             </tr>`;
           }).join('')}
         </tbody>
       </table>
     </div>
   </div>`;
+}
+
+// ─── USER CRUD ────────────────────────────────────────────────────────────────
+function _divisiOptions(selected='') {
+  const divisiList = [...new Set(AppData.users.map(u=>u.divisi))];
+  return divisiList.map(d=>`<option value="${d}" ${d===selected?'selected':''}>${d}</option>`).join('');
+}
+
+function openAddUser() {
+  openModal('Tambah User Baru', `
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">ID Karyawan</label>
+        <input id="fu_id" class="form-input" placeholder="EMP16">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nama Lengkap</label>
+        <input id="fu_nama" class="form-input" placeholder="Nama karyawan">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Divisi</label>
+        <select id="fu_divisi" class="form-select">
+          ${_divisiOptions()}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Divisi Baru (opsional)</label>
+        <input id="fu_divisi_baru" class="form-input" placeholder="Atau ketik divisi baru...">
+        <span class="form-hint">Kosongkan jika pakai pilihan di atas</span>
+      </div>
+    </div>`, () => {
+    const id     = document.getElementById('fu_id').value.trim().toUpperCase();
+    const nama   = document.getElementById('fu_nama').value.trim();
+    const divBaru= document.getElementById('fu_divisi_baru').value.trim();
+    const divisi = divBaru || document.getElementById('fu_divisi').value;
+    if (!id || !nama) { toast('ID dan Nama wajib diisi', 'error'); return; }
+    if (AppData.users.find(u=>u.id===id)) { toast('ID karyawan sudah ada', 'error'); return; }
+    AppData.users.push({ id, nama, divisi });
+    saveData();
+    toast('User berhasil ditambahkan ✓');
+    closeModal();
+    navigate('users');
+  });
+}
+
+function openEditUser(uid) {
+  const u = AppData.users.find(x=>x.id===uid);
+  if (!u) return;
+  openModal(`Edit User: ${u.nama}`, `
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">ID Karyawan</label>
+        <input class="form-input" value="${u.id}" disabled style="opacity:.5">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nama Lengkap</label>
+        <input id="fu_nama" class="form-input" value="${u.nama}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Divisi</label>
+        <select id="fu_divisi" class="form-select">
+          ${_divisiOptions(u.divisi)}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Divisi Baru (opsional)</label>
+        <input id="fu_divisi_baru" class="form-input" placeholder="Atau ketik divisi baru...">
+        <span class="form-hint">Kosongkan jika pakai pilihan di atas</span>
+      </div>
+    </div>`, () => {
+    const nama   = document.getElementById('fu_nama').value.trim();
+    const divBaru= document.getElementById('fu_divisi_baru').value.trim();
+    const divisi = divBaru || document.getElementById('fu_divisi').value;
+    if (!nama) { toast('Nama wajib diisi', 'error'); return; }
+    // Update nama di log juga
+    const oldNama = u.nama;
+    u.nama   = nama;
+    u.divisi = divisi;
+    AppData.logAset.forEach(l => {
+      if (l.user_asal===oldNama)   l.user_asal=nama;
+      if (l.user_tujuan===oldNama) l.user_tujuan=nama;
+    });
+    AppData.logKomponen.forEach(l => { if (l.nama_user===oldNama) l.nama_user=nama; });
+    AppData.logServis.forEach(l => { if (l.nama_user===oldNama) l.nama_user=nama; });
+    saveData();
+    toast('User diperbarui ✓');
+    closeModal();
+    navigate('users');
+  });
+}
+
+function confirmDeleteUser(uid) {
+  const u = AppData.users.find(x=>x.id===uid);
+  if (!u) return;
+  const hasAssets = AppData.assets.some(a=>a.user_id===uid);
+  openModal(`Hapus User: ${u.nama}`, `
+    <div style="padding:16px;background:rgba(255,80,80,0.07);border-radius:8px;border:1px solid rgba(255,80,80,0.2)">
+      <p style="margin:0 0 8px;font-weight:600;color:var(--red,#ff5050)">⚠ Konfirmasi Hapus</p>
+      <p style="margin:0;font-size:13px;color:var(--text2)">Anda akan menghapus user <b>${u.nama}</b> (${u.id}) — Divisi ${u.divisi}.</p>
+      ${hasAssets ? `<p style="margin:8px 0 0;font-size:12px;color:var(--orange)">⚡ User ini masih memiliki aset. Aset akan tetap ada tapi tidak memiliki pemilik (unassigned).</p>` : ''}
+    </div>`, () => {
+    AppData.users = AppData.users.filter(x=>x.id!==uid);
+    saveData();
+    toast('User dihapus');
+    closeModal();
+    navigate('users');
+  });
+  // Ganti label tombol Simpan jadi Hapus
+  setTimeout(() => {
+    const btn = document.getElementById('modalSave');
+    if (btn) { btn.textContent = 'Hapus'; btn.style.background = 'var(--red,#ff5050)'; }
+  }, 50);
 }
 
 function filterUsers(q, div='') {
