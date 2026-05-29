@@ -558,3 +558,39 @@ select.filter-select:focus { border-color: var(--accent); }
 }
 .toast.success { border-left: 3px solid var(--green); }
 .toast.error { border-left: 3px solid var(--red); }
+
+/* ─── USER CRUD BUTTONS ─────────────────────────────────────── */
+.btn-add-user {
+  margin-left: auto;
+  padding: 8px 16px;
+  background: var(--green);
+  color: var(--bg);
+  border: none;
+  border-radius: var(--radius);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity .15s;
+  white-space: nowrap;
+}
+.btn-add-user:hover { opacity: .82; }
+
+.btn-row-edit, .btn-row-del {
+  border: none;
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: opacity .15s;
+  margin: 0 2px;
+}
+.btn-row-edit {
+  background: rgba(100,180,255,0.12);
+  color: var(--blue, #64b4ff);
+}
+.btn-row-del {
+  background: rgba(255,80,80,0.10);
+  color: var(--red, #ff5050);
+}
+.btn-row-edit:hover, .btn-row-del:hover { opacity: .7; }
