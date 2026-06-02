@@ -1,12 +1,24 @@
 // ============================================================
-// AssetPro — Supabase Database Layer
+// AssetPro — Supabase Database Layer (moved to js/)
 // Ganti nilai CONFIG di bawah setelah buat project di supabase.com
 // ============================================================
 
 const SUPABASE_CONFIG = {
-  url: 'https://hekooimwfuffjxrdwmaa.supabase.co/rest/v1/',   // ganti ini
-  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhla29vaW13ZnVmZmp4cmR3bWFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzNDgzNzcsImV4cCI6MjA5NTkyNDM3N30.bHbqSZUZO98QwvOV3LZIcV39QfukourXU3PYK8s-feg',              // ganti ini
+  // Isi dengan Project URL (tanpa "/rest/v1/")
+  url: 'https://hekooimwfuffjxrdwmaa.supabase.co',
+  // Jangan commit kunci nyata ke repo. Ganti nilai berikut dengan
+  // 'YOUR_ANON_PUBLIC_KEY' atau kosongkan lalu atur kunci secara lokal.
+  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhla29vaW13ZnVmZmp4cmR3bWFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzNDgzNzcsImV4cCI6MjA5NTkyNDM3N30.bHbqSZUZO98QwvOV3LZIcV39QfukourXU3PYK8s-feg',
 };
+
+/*
+  Keamanan / saran deploy:
+  - Jangan pernah commit anonKey/secret ke repo publik.
+  - Untuk development lokal, Anda bisa buat file `js/config.local.js` yang
+    mendefinisikan `const SUPABASE_CONFIG = { url: '...', anonKey: '...' };`
+    dan load file itu sebelum `js/supabase-db.js` di `index.html`.
+  - Untuk produksi, simpan kunci di server/backend atau gunakan proxy.
+*/
 
 // Inisialisasi Supabase client
 const { createClient } = supabase;
@@ -20,23 +32,19 @@ function sbErr(label, error) {
   toast(`Error: ${label} — ${error?.message || 'cek konsol'}`, 'danger');
 }
 
-// Format tanggal dari Date object atau string ke display ID (e.g. "27 Mei")
 function fmtDate(val) {
   if (!val) return '—';
   return new Date(val).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
 }
 
 // ============================================================
-// DB — API wrapper, menggantikan localStorage DB lama
+// DB — API wrapper
 // ============================================================
 const DB = {
-
-  // ── SESSION (tetap pakai localStorage, ringan) ────────────
   getSession()  { try { return JSON.parse(localStorage.getItem('assetpro_session')) || null; } catch { return null; } },
   setSession(u) { localStorage.setItem('assetpro_session', JSON.stringify(u)); },
   clearSession(){ localStorage.removeItem('assetpro_session'); },
 
-  // ── USERS ─────────────────────────────────────────────────
   async getUsers() {
     const { data, error } = await sb.from('users').select('*').order('id');
     if (error) { sbErr('getUsers', error); return []; }
@@ -44,7 +52,6 @@ const DB = {
   },
 
   async saveUsers(arr) {
-    // Dipakai untuk upsert array (migrasi dari localStorage)
     const { error } = await sb.from('users').upsert(arr, { onConflict: 'id' });
     if (error) sbErr('saveUsers', error);
   },
@@ -54,7 +61,7 @@ const DB = {
       .from('users')
       .select('*')
       .eq('username', username)
-      .eq('password', password)   // produksi: pakai hashing!
+      .eq('password', password)
       .eq('role', role)
       .eq('status', 'Aktif')
       .maybeSingle();
@@ -73,7 +80,6 @@ const DB = {
     if (error) { sbErr('deleteUser', error); }
   },
 
-  // ── ASSETS ────────────────────────────────────────────────
   async getAssets(filters = {}) {
     let q = sb.from('assets').select('*').order('created_at', { ascending: false });
     if (filters.search) {
@@ -83,7 +89,6 @@ const DB = {
     if (filters.status)   q = q.eq('status', filters.status);
     const { data, error } = await q;
     if (error) { sbErr('getAssets', error); return []; }
-    // Normalisasi ke format lama agar kompatibel dengan UI
     return data.map(a => ({
       ...a,
       c: a.code, n: a.name, cat: a.category,
@@ -113,7 +118,6 @@ const DB = {
     if (error) sbErr('updateAsset', error);
   },
 
-  // ── WORK ORDERS ───────────────────────────────────────────
   async getWO() {
     const { data, error } = await sb
       .from('work_orders')
@@ -174,7 +178,6 @@ const DB = {
     return 'WO-' + String(last + 1).padStart(4, '0');
   },
 
-  // ── COMPONENTS / STOCK ────────────────────────────────────
   async getComponents() {
     const { data, error } = await sb.from('components').select('*').order('code');
     if (error) { sbErr('getComponents', error); return []; }
@@ -192,7 +195,6 @@ const DB = {
     if (error) sbErr('updateStock', error);
   },
 
-  // ── TRANSFERS ─────────────────────────────────────────────
   async getTransfers() {
     const { data, error } = await sb
       .from('transfers')
@@ -213,7 +215,6 @@ const DB = {
     if (error) sbErr('updateTransfer', error);
   },
 
-  // ── PURCHASE ORDERS ───────────────────────────────────────
   async getPO() {
     const { data, error } = await sb
       .from('purchase_orders')
@@ -238,7 +239,6 @@ const DB = {
     if (error) sbErr('updatePO', error);
   },
 
-  // ── AUDIT LOG ─────────────────────────────────────────────
   async log(tableName, recordId, action, oldData, newData, userId) {
     await sb.from('audit_log').insert({
       table_name: tableName,
