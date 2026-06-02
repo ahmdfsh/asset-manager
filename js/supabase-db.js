@@ -8,7 +8,7 @@ const SUPABASE_CONFIG = {
   url: 'https://hekooimwfuffjxrdwmaa.supabase.co',
   // Jangan commit kunci nyata ke repo. Ganti nilai berikut dengan
   // 'YOUR_ANON_PUBLIC_KEY' atau kosongkan lalu atur kunci secara lokal.
-  anonKey: 'YOUR_ANON_PUBLIC_KEY',
+  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhla29vaW13ZnVmZmp4cmR3bWFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzNDgzNzcsImV4cCI6MjA5NTkyNDM3N30.bHbqSZUZO98QwvOV3LZIcV39QfukourXU3PYK8s-feg',
 };
 
 /*
