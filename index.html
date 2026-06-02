@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Asset Pro — Manajemen Aset</title>
+<title>AssetPro — Manajemen Aset</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <!-- Supabase JS SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -215,7 +215,7 @@ textarea.fi{resize:vertical;min-height:60px;line-height:1.5}
 <div class="login-wrap" id="loginWrap">
   <div class="login-box">
     <div class="login-logo"><div class="login-logo-ic"><i class="ti ti-building-factory-2"></i></div><span>AssetPro</span></div>
-    <div class="login-sub">Sistem Manajemen Aset — Gas Login</div>
+    <div class="login-sub">Sistem Manajemen Aset — Masuk ke akun Anda</div>
     <div style="margin-bottom:14px">
       <div class="fg"><label class="fl">Pilih Role</label></div>
       <div class="login-roles" id="loginRoles">
@@ -1203,14 +1203,14 @@ function downloadQR(){
     if(canvas){const link=document.createElement('a');link.download='QR-'+code+'.png';link.href=canvas.toDataURL('image/png');link.click();toast('QR Code diunduh','success');}
   }
 }
-async function printQRLabel(){
+function printQRLabel(){
   const wrap=document.getElementById('qrWrap');
   const img=wrap.querySelector('img');
   const canvas=wrap.querySelector('canvas');
   const code=document.getElementById('qrGenCode').textContent;
   const _assets2 = await DB.getAssets();
   const a=_assets2.find(x=>x.c===code);
-  const src=img?img.src:(canvas?canvas.toDataURL():"");
+  const src=img?img.src:(canvas?canvas.toDataURL():'');
   const win=window.open('','_blank','width=400,height=500');
   win.document.write(`<html><head><title>QR Label ${code}</title><style>body{font-family:system-ui;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:16px;background:#fff}.box{border:2px solid #000;border-radius:8px;padding:16px;display:inline-flex;flex-direction:column;align-items:center;gap:8px;max-width:260px}.code{font-family:monospace;font-size:14px;font-weight:700;letter-spacing:1px}.name{font-size:12px;text-align:center;color:#333}.loc{font-size:10px;color:#666}</style></head><body><div class="box"><img src="${src}" width="200" height="200"><div class="code">${code}</div><div class="name">${a?a.n:''}</div><div class="loc">${a?a.loc:''}</div></div><script>window.onload=()=>{window.print();}<\/script></body></html>`);
   win.document.close();
@@ -1350,7 +1350,7 @@ function addPORow(){
 const WO_PRIO_CLASS = {Kritis:'pr2',Tinggi:'pr2',Sedang:'pa2',Rendah:'pg2'};
 const WO_STATUS_CLASS = {'Terbuka':'pb2','Dalam Proses':'pa2','Selesai':'pg2','Overdue':'pr2','Dibatalkan':'pgr'};
 
-async function renderWO(){
+function renderWO(){
   const wos = await DB.getWO();
   const el = document.getElementById('woTbody');
   if(!el) return;
@@ -1387,7 +1387,7 @@ async function renderWO(){
   if(mets[3]) mets[3].textContent = over;
 }
 
-async function doCreateWO(){
+function doCreateWO(){
   const aset = document.getElementById('woAset').value;
   const jenis = document.getElementById('woJenis').value;
   const prio = document.getElementById('woPrio').value;
@@ -1418,6 +1418,7 @@ async function openUpdateWO(id){
   document.getElementById('uwoIdDisplay').value = w.id;
   document.getElementById('uwoAset').value = w.aset;
   document.getElementById('uwoJenis').value = w.jenis;
+  // Set select values
   const teknisiSel = document.getElementById('uwoTeknisi');
   for(let o of teknisiSel.options){ if(o.value===w.teknisi){ o.selected=true; break; } }
   const prioSel = document.getElementById('uwoPrio');
@@ -1429,7 +1430,7 @@ async function openUpdateWO(id){
   openM('mUpdateWO');
 }
 
-async function doUpdateWO(){
+function doUpdateWO(){
   const id = document.getElementById('uwoId').value;
   const wos = await DB.getWO();
   const idx = wos.findIndex(x=>x.id===id);

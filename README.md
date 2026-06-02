@@ -39,32 +39,10 @@ Buka file `js/supabase-db.js`, ganti dua baris ini:
 
 ```js
 const SUPABASE_CONFIG = {
-  url: 'https://YOUR_PROJECT_ID.supabase.co',  // ← ganti ini (tanpa /rest/v1/)
-  anonKey: 'YOUR_ANON_PUBLIC_KEY',             // ← ganti ini (JANGAN commit ke repo)
+  url: 'https://YOUR_PROJECT_ID.supabase.co',  // ← ganti ini
+  anonKey: 'YOUR_ANON_PUBLIC_KEY',             // ← ganti ini
 };
 ```
-
-Keamanan kunci:
-
-- Jangan commit `anonKey` ke repository publik. Kunci ini boleh digunakan di frontend untuk demo, tetapi lebih aman menyimpan dan memutar kunci jika aplikasinu production.
-- Untuk development lokal, pertimbangkan membuat `js/config.local.js` (tidak di-commit) dan menaruh:
-
-```js
-// contoh js/config.local.js (JANGAN commit)
-const SUPABASE_CONFIG = {
-  url: 'https://YOUR_PROJECT_ID.supabase.co',
-  anonKey: 'eyJ...'
-};
-```
-
-Lalu tambahkan tag script untuk file ini sebelum `js/supabase-db.js` di `index.html` saat development:
-
-```html
-<script src="js/config.local.js"></script>
-<script src="js/supabase-db.js"></script>
-```
-
-Atau simpan kredensial pada backend dan panggil API server-side daripada langsung dari frontend untuk keamanan lebih baik.
 
 ### 5. Push ke GitHub & Aktifkan GitHub Pages
 ```bash
